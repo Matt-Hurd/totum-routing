@@ -10,6 +10,43 @@ const RouteListDisplay: React.FC = () => {
   const dispatch = useDispatch();
   const [expandedBranchIndex, setExpandedBranchIndex] = useState<number | null>(null);
   const [isDraggingEnabled, setIsDraggingEnabled] = useState(false);
+  const [selectedPoints, setSelectedPoints] = useState<number[]>([]);
+  const [dragging, setDragging] = useState(false);
+
+  const wasMultiSelectKeyUsed = (event: MouseEvent | KeyboardEvent) => event.shiftKey;
+
+  const performAction = (pointIndex: number, event: MouseEvent | KeyboardEvent) => {
+    if (expandedBranchIndex === null) return;
+
+    if (wasMultiSelectKeyUsed(event)) {
+      const firstSelected = selectedPoints[0];
+      const lastSelected = selectedPoints[selectedPoints.length - 1];
+
+      const first = Math.min(firstSelected, lastSelected, pointIndex);
+      const last = Math.max(firstSelected, lastSelected, pointIndex);
+      const size = last - first + 1;
+
+      setSelectedPoints(Array.from(new Array(size), (_x, i) => i + first));
+      return;
+    }
+
+    setSelectedPoints([pointIndex]);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onClick = (pointIndex: number, event: any) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    performAction(pointIndex, event);
+  };
 
   if (!route) return null;
 
@@ -48,13 +85,35 @@ const RouteListDisplay: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePointDragEnd = (branchIdx: number) => (result: any) => {
     if (!result.destination) return;
+    setDragging(false);
 
-    const reorderedPoints = Array.from(route.branches[branchIdx].points);
-    const [movedPoint] = reorderedPoints.splice(result.source.index, 1);
-    reorderedPoints.splice(result.destination.index, 0, movedPoint);
+    const currentPoints = Array.from(route.branches[branchIdx].points);
+    const lastSelected = selectedPoints[selectedPoints.length - 1];
+    const isMultiDrag = selectedPoints.length > 1;
+    let destinationIndex = result.destination.index;
+
+    if (isMultiDrag) {
+      if (selectedPoints.includes(destinationIndex)) return;
+
+      const pointsToMove = selectedPoints.map((idx) => currentPoints[idx]);
+
+      if (destinationIndex > lastSelected) destinationIndex -= pointsToMove.length - 1;
+
+      for (let i = selectedPoints.length - 1; i >= 0; i--) {
+        currentPoints.splice(selectedPoints[i], 1);
+      }
+
+      currentPoints.splice(destinationIndex, 0, ...pointsToMove);
+
+      setSelectedPoints([]);
+    } else {
+      const [movedPoint] = currentPoints.splice(result.source.index, 1);
+      currentPoints.splice(destinationIndex, 0, movedPoint);
+    }
+
     const updatedBranch = {
       ...route.branches[branchIdx],
-      points: reorderedPoints,
+      points: currentPoints,
     };
     dispatch(updateBranch({ branch: updatedBranch, index: branchIdx }));
   };
@@ -88,7 +147,7 @@ const RouteListDisplay: React.FC = () => {
                       <div className="routeList__branchName">
                         <input
                           type="checkbox"
-                          checked={branch.enabled}
+                          checked={branch.enabled || false}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleCheckboxChange(bIndex, e.target.checked)}
                         />
@@ -96,7 +155,7 @@ const RouteListDisplay: React.FC = () => {
                       </div>
 
                       {expandedBranchIndex === bIndex && (
-                        <DragDropContext onDragEnd={handlePointDragEnd(bIndex)}>
+                        <DragDropContext onDragStart={() => setDragging(true)} onDragEnd={handlePointDragEnd(bIndex)}>
                           <Droppable droppableId={`branch-${bIndex}-points`} key={branch.points.length}>
                             {(provided) => (
                               <div
@@ -111,13 +170,19 @@ const RouteListDisplay: React.FC = () => {
                                     draggableId={`${branch.name}-${pointIndex}`}
                                     index={pointIndex}
                                   >
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
                                       <div
-                                        className="pointRow"
+                                        className={`pointRow no-select ${
+                                          selectedPoints.includes(pointIndex) ? "selected" : ""
+                                        } ${dragging && selectedPoints.includes(pointIndex) ? "dragging" : ""}`}
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
+                                        onClick={(e) => onClick(pointIndex, e)}
                                       >
+                                        {snapshot.isDragging && (
+                                          <span className="drag-count">{selectedPoints.length}</span>
+                                        )}
                                         <span className="pointIndex">{pointIndex}</span>
                                         <span className="pointName">{route.things[point.thingId].name}</span>
                                         <div className="pointActions">
