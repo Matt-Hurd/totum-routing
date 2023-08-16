@@ -24,7 +24,7 @@ const BranchNotesDisplay: React.FC = () => {
       updateBranch({
         branch: { ...route.branches[branchIndex], htmlNote: content },
         index: branchIndex,
-      })
+      }),
     );
   };
 

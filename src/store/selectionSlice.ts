@@ -10,7 +10,7 @@ interface SelectionState {
 const initialState: SelectionState = {
   branchIndex: null,
   pointIndex: null,
-  layer: "sky"
+  layer: "sky",
 };
 
 export const selectionSlice = createSlice({

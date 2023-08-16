@@ -55,7 +55,7 @@ export const RouteMarkers: React.FC = () => {
   };
 
   const findUsageOfThing = (
-    thingId: string
+    thingId: string,
   ): Array<{ branchName: string; branchIndex: number; pointIndex: number }> => {
     const usages: Array<{ branchName: string; branchIndex: number; pointIndex: number }> = [];
 
@@ -117,7 +117,7 @@ export const RouteMarkers: React.FC = () => {
                 </Popup>
               </Marker>
             );
-          })
+          }),
         )}
     </LayerGroup>
   );

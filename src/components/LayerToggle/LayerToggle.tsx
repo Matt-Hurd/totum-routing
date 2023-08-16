@@ -1,7 +1,7 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectRouteData } from '../../store/routeSlice';
-import { selectSelection, setLayer } from '../../store/selectionSlice';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { selectRouteData } from "../../store/routeSlice";
+import { selectSelection, setLayer } from "../../store/selectionSlice";
 
 const LayerToggle: React.FC = () => {
   const route = useSelector(selectRouteData);
@@ -22,7 +22,7 @@ const LayerToggle: React.FC = () => {
           key={layerKey}
           onClick={() => handleLayerChange(layerKey)}
           disabled={selection.layer === layerKey}
-          style={selection.layer === layerKey ? { backgroundColor: 'red' } : {}}
+          style={selection.layer === layerKey ? { backgroundColor: "red" } : {}}
         >
           {route.game.layers[layerKey].name}
         </button>

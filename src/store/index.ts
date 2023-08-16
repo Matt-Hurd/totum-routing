@@ -1,20 +1,20 @@
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import routeReducer from './routeSlice';
-import userPreferencesReducer from './preferencesSlice';
-import selectionReducer from './selectionSlice';
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import routeReducer from "./routeSlice";
+import userPreferencesReducer from "./preferencesSlice";
+import selectionReducer from "./selectionSlice";
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage,
-  whitelist: ['route']
+  whitelist: ["route"],
 };
 
 const rootReducer = combineReducers({
   route: routeReducer,
   selection: selectionReducer,
-  userPreferences: userPreferencesReducer
+  userPreferences: userPreferencesReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
