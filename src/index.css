@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@font-face {
+  font-family: ZeldaAncient;
+  src: url("/assets/fonts/Nin-ZeldaBotW-Ancient.bfotf.otf");
+}
+
+@font-face {
+  font-family: ZeldaGlyphs;
+  src: url("/assets/fonts/Nin-ZeldaGlyphs-v2-Deco.bfotf.otf");
+}
+
+@font-face {
+  font-family: ZeldaMain;
+  src: url("/assets/fonts/nintendo_NTLG-DB_DH_002.bfotf.otf");
+}
+
+@font-face {
+  font-family: ZeldaMainSub;
+  src: url("/assets/fonts/ninP_RodinNTLG-B_DH_003_subset.bfotf.otf");
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
