@@ -13,7 +13,7 @@ function RouteSelection() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   useEffect(() => {
-    if (existingRoute) {
+    if (existingRoute.game.name) {
       setIsDialogOpen(true);
     }
   }, [existingRoute]);
