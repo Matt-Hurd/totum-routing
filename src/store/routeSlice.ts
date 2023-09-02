@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Branch, Game, Point, Route } from "../models";
+import { Branch, Game, Point, Route, Thing } from "../models";
 import { RootState } from ".";
 
 interface RouteState {
@@ -48,6 +48,15 @@ const routeSlice = createSlice({
     deletePoint: (state, action: PayloadAction<{ branchIndex: number; pointIndex: number }>) => {
       state.route.branches[action.payload.branchIndex].points.splice(action.payload.pointIndex, 1);
     },
+    addThing: (state, action: PayloadAction<Thing>) => {
+      state.route.things[action.payload.uid] = action.payload;
+    },
+    updateThing: (state, action: PayloadAction<Thing>) => {
+      state.route.things[action.payload.uid] = action.payload;
+    },
+    deleteThing: (state, action: PayloadAction<string>) => {
+      delete state.route.things[action.payload];
+    },
   },
 });
 
@@ -60,6 +69,9 @@ export const {
   addPoint,
   updatePoint,
   deletePoint,
+  addThing,
+  updateThing,
+  deleteThing,
 } = routeSlice.actions;
 
 export const selectRouteStatus = (state: RootState) => state.route.status;

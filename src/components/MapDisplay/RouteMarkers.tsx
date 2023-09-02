@@ -1,16 +1,20 @@
 import React, { useRef } from "react";
 import { LayerGroup, Marker, Popup } from "react-leaflet";
-import { Thing, Point } from "../../models";
+import { Thing } from "../../models";
 import { useDispatch, useSelector } from "react-redux";
 
-import "./popup.css";
-import { addPoint, deletePoint, selectRouteData } from "../../store/routeSlice";
-import L, { Icon } from "leaflet";
+import { addPoint, selectRouteData } from "../../store/routeSlice";
 import { selectSelection, setBranchIndex, setPointIndex } from "../../store/selectionSlice";
+import { selectThingVisibility } from "../../store/thingVisibilitySlice";
+import { Icon } from "leaflet";
+import L from "leaflet";
+import { Action } from "../../models/Point";
+import ThingPopup from "./ThingPopup";
 
 export const RouteMarkers: React.FC = () => {
   const route = useSelector(selectRouteData);
   const selection = useSelector(selectSelection);
+  const { thingVisibility, hideThingsInBranch } = useSelector(selectThingVisibility);
   const dispatch = useDispatch();
 
   const markerRefs = useRef(new Map());
@@ -42,14 +46,23 @@ export const RouteMarkers: React.FC = () => {
 
   if (!route) return null;
 
-  const handleDoubleClick = (branchIndex: number, pointIndex: number) => {
-    dispatch(setBranchIndex(branchIndex));
-    dispatch(setPointIndex(pointIndex));
+  const handleDoubleClick = (thing: Thing) => {
+    const thingUsage = findUsageOfThing(thing.uid);
+    if (thingUsage.length === 1) {
+      dispatch(setBranchIndex(thingUsage[0].branchIndex));
+      dispatch(setPointIndex(thingUsage[0].pointIndex));
+    }
   };
 
-  const handleAltClick = (point: Point) => {
+  const handleAltClick = (thing: Thing) => {
     if (selection.branchIndex !== null && selection.pointIndex !== null) {
-      dispatch(addPoint({ branchIndex: selection.branchIndex, point: point, pointIndex: selection.pointIndex + 1 }));
+      dispatch(
+        addPoint({
+          branchIndex: selection.branchIndex,
+          point: { thingId: thing.uid, htmlNote: "", shortNote: "", action: Action.None },
+          pointIndex: selection.pointIndex + 1,
+        }),
+      );
       dispatch(setPointIndex(selection.pointIndex + 1));
     }
   };
@@ -69,56 +82,63 @@ export const RouteMarkers: React.FC = () => {
 
     return usages;
   };
+  const thingIdsInInvisibleBranches = new Set();
+  route.branches.forEach((branch) => {
+    if (!branch.enabled) {
+      branch.points.forEach((point) => {
+        thingIdsInInvisibleBranches.add(point.thingId);
+      });
+    }
+  });
+
+  const thingIdsInVisibleBranches = new Set();
+  route.branches.forEach((branch) => {
+    if (branch.enabled) {
+      branch.points.forEach((point) => {
+        thingIdsInVisibleBranches.add(point.thingId);
+      });
+    }
+  });
+
+  const filteredThings = Object.values(route.things).filter((thing) => {
+    if (thing.layerId !== selection.layer) return false;
+    if (thingIdsInVisibleBranches.has(thing.uid)) return true;
+
+    // Check if the thing type is visible
+    if (!thingVisibility[thing.type]) return false;
+
+    // Check if the thing is already in an invisible branch and hideThingsInBranch is true
+    if (hideThingsInBranch && thingIdsInInvisibleBranches.has(thing.uid)) return false;
+
+    return true;
+  });
 
   return (
     <LayerGroup>
-      {route.branches
-        .filter((branch) => branch.enabled)
-        .flatMap((branch, branchIndex) =>
-          branch.points.map((point, pointIndex) => {
-            const currentThing = route.things[point.thingId];
-            const { coordinates, name } = currentThing;
-            const opacity = currentThing.layerId === selection.layer ? 1 : 0;
+      {filteredThings.map((thing) => {
+        const { coordinates } = thing;
 
-            return (
-              <Marker
-                key={branch.name + " : " + pointIndex}
-                opacity={opacity}
-                position={[-coordinates.x, coordinates.y]}
-                icon={getIconForThing(currentThing)}
-                ref={(ref) => markerRefs.current.set(point.thingId, ref)}
-                eventHandlers={{
-                  dblclick: () => handleDoubleClick(branchIndex, pointIndex),
-                  click: (e) => {
-                    if (e.originalEvent.altKey) {
-                      handleAltClick(point);
-                    }
-                  },
-                }}
-              >
-                <Popup autoPan={false}>
-                  {name}
-                  <br />
-                  {coordinates.y.toFixed(0)} | {coordinates.x.toFixed(0)} | {coordinates.z.toFixed(0)}
-                  <br />
-                  {findUsageOfThing(point.thingId).map((usage) => (
-                    <div key={`${usage.branchName}-${usage.pointIndex}`}>
-                      {usage.branchName} {usage.pointIndex}
-                      <button onClick={() => handleDoubleClick(usage.branchIndex, usage.pointIndex)}>Select</button>
-                      <button
-                        onClick={() =>
-                          dispatch(deletePoint({ branchIndex: usage.branchIndex, pointIndex: usage.pointIndex }))
-                        }
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </Popup>
-              </Marker>
-            );
-          }),
-        )}
+        return (
+          <Marker
+            key={thing.uid}
+            position={[-coordinates.x, coordinates.y]}
+            icon={getIconForThing(thing)}
+            ref={(ref) => markerRefs.current.set(thing.uid, ref)}
+            eventHandlers={{
+              dblclick: () => handleDoubleClick(thing),
+              click: (e) => {
+                if (e.originalEvent.altKey) {
+                  handleAltClick(thing);
+                }
+              },
+            }}
+          >
+            <Popup autoPan={false}>
+              <ThingPopup thing={thing} findUsageOfThing={findUsageOfThing} />
+            </Popup>
+          </Marker>
+        );
+      })}
     </LayerGroup>
   );
 };

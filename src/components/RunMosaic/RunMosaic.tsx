@@ -34,6 +34,8 @@ import { selectRouteStatus } from "../../store/routeSlice";
 import StorageManager from "../../utils/StorageManager";
 import { RootState } from "../../store";
 import LayerToggle from "../LayerToggle/LayerToggle";
+import SelectedInfoDisplay from "../SelectedInfoDisplay/SelectedInfoDisplay";
+import ThingVisibilityToggle from "../ThingVisibilityToggle/ThingVisiblityToggle";
 
 const RunMosaic: React.FC = () => {
   const routeStatus = useSelector(selectRouteStatus);
@@ -45,21 +47,37 @@ const RunMosaic: React.FC = () => {
     : {
         direction: "row",
         first: {
-          direction: "column",
-          first: "Map",
-          second: "Route List",
+          first: {
+            first: {
+              first: "Map",
+              second: { first: "Layer Toggle", second: "Selected Info", direction: "row" },
+              direction: "column",
+              splitPercentage: 80,
+            },
+            second: "Route List",
+            direction: "row",
+            splitPercentage: 75,
+          },
+          second: "Thing Visibility",
+          direction: "row",
+          splitPercentage: 80,
         },
-        second: {
-          first: "Point Notes",
-          second: "Branch Notes",
-          direction: "column",
-        },
+        second: { first: "Point Notes", second: "Branch Notes", direction: "column" },
+        splitPercentage: 80,
       };
 
   const [currentNode, setCurrentNode] = useState<MosaicNode<string> | null>(initialLayout);
 
   const findMissingDisplays = (node: MosaicNode<string> | null) => {
-    const allDisplays = ["Map", "Route List", "Point Notes", "Branch Notes", "Layer Toggle"];
+    const allDisplays = [
+      "Map",
+      "Route List",
+      "Point Notes",
+      "Branch Notes",
+      "Layer Toggle",
+      "Selected Info",
+      "Thing Visibility",
+    ];
     const allVisibleDisplays = getLeaves(node);
     return filter(allDisplays, (display) => {
       return !allVisibleDisplays.includes(display);
@@ -94,6 +112,12 @@ const RunMosaic: React.FC = () => {
         break;
       case "Layer Toggle":
         component = <LayerToggle />;
+        break;
+      case "Selected Info":
+        component = <SelectedInfoDisplay />;
+        break;
+      case "Thing Visibility":
+        component = <ThingVisibilityToggle />;
         break;
       default:
         component = <div />;
@@ -159,13 +183,11 @@ const RunMosaic: React.FC = () => {
 
   return (
     <div className={"run-mosaic " + darkModeClass}>
-      {availableDisplays.length !== 0 && (
-        <Toolbar
-          onButtonClick={handleToolbarButtonClick}
-          onAddDisplay={handleToolbarAddDisplay}
-          missingDisplays={availableDisplays}
-        />
-      )}
+      <Toolbar
+        onButtonClick={handleToolbarButtonClick}
+        onAddDisplay={handleToolbarAddDisplay}
+        missingDisplays={availableDisplays}
+      />
       <Mosaic renderTile={renderWindow} onChange={onChange} value={currentNode} blueprintNamespace="bp5" />
     </div>
   );

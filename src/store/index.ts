@@ -4,6 +4,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import routeReducer from "./routeSlice";
 import userPreferencesReducer from "./preferencesSlice";
 import selectionReducer from "./selectionSlice";
+import thingVisibilityReducer from "./thingVisibilitySlice";
 
 const persistConfig = {
   key: "root",
@@ -13,6 +14,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   route: routeReducer,
+  thingVisibility: thingVisibilityReducer,
   selection: selectionReducer,
   userPreferences: userPreferencesReducer,
 });

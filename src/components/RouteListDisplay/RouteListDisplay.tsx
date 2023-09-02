@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import "./RouteListDisplay.scss";
-import { selectRouteData, updateBranch, updateBranches, deletePoint } from "../../store/routeSlice";
+import { selectRouteData, updateBranch, updateBranches, deletePoint, addBranch } from "../../store/routeSlice";
 import { setBranchIndex, setPointIndex } from "../../store/selectionSlice";
+import { Icon } from "@blueprintjs/core";
+import { Branch } from "../../models";
 
 const RouteListDisplay: React.FC = () => {
   const route = useSelector(selectRouteData);
@@ -12,6 +14,8 @@ const RouteListDisplay: React.FC = () => {
   const [isDraggingEnabled, setIsDraggingEnabled] = useState(false);
   const [selectedPoints, setSelectedPoints] = useState<number[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [editingBranchIndex, setEditingBranchIndex] = useState<number | null>(null);
+  const [tempBranchName, setTempBranchName] = useState<string>("");
 
   const wasMultiSelectKeyUsed = (event: MouseEvent | KeyboardEvent) => event.shiftKey;
 
@@ -118,12 +122,28 @@ const RouteListDisplay: React.FC = () => {
     dispatch(updateBranch({ branch: updatedBranch, index: branchIdx }));
   };
 
+  const handleEditBranchName = (branchName: string, index: number) => {
+    setEditingBranchIndex(index);
+    setTempBranchName(branchName);
+  };
+
+  const handleSaveBranchName = (index: number) => {
+    dispatch(updateBranch({ branch: { ...route.branches[index], name: tempBranchName }, index }));
+    setEditingBranchIndex(null);
+  };
+
+  const handleAddBranch = () => {
+    const newBranch = new Branch("New Branch");
+    dispatch(addBranch(newBranch));
+  };
+
   return (
-    <div className="routeList">
+    <div className="routeList no-select">
       <label>
         Enable Dragging
         <input type="checkbox" checked={isDraggingEnabled} onChange={(e) => setIsDraggingEnabled(e.target.checked)} />
       </label>
+      <button onClick={handleAddBranch}>Add Branch</button>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="droppable-branches" key={route.branches.length}>
@@ -142,6 +162,7 @@ const RouteListDisplay: React.FC = () => {
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
+                      onDoubleClick={() => handleSelect(bIndex, -1)}
                       onClick={() => handleRowClick(bIndex)}
                     >
                       <div className="routeList__branchName">
@@ -151,7 +172,36 @@ const RouteListDisplay: React.FC = () => {
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleCheckboxChange(bIndex, e.target.checked)}
                         />
-                        <strong>{branch.name}</strong>
+                        {editingBranchIndex === bIndex ? (
+                          <>
+                            <input
+                              value={tempBranchName}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onChange={(e) => setTempBranchName(e.target.value)}
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveBranchName(bIndex);
+                              }}
+                            >
+                              Save
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <strong>{branch.name}</strong>
+                            <Icon
+                              icon="edit"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditBranchName(branch.name, bIndex);
+                              }}
+                            />
+                          </>
+                        )}
                       </div>
 
                       {expandedBranchIndex === bIndex && (
@@ -172,9 +222,9 @@ const RouteListDisplay: React.FC = () => {
                                   >
                                     {(provided, snapshot) => (
                                       <div
-                                        className={`pointRow no-select ${
-                                          selectedPoints.includes(pointIndex) ? "selected" : ""
-                                        } ${dragging && selectedPoints.includes(pointIndex) ? "dragging" : ""}`}
+                                        className={`pointRow ${selectedPoints.includes(pointIndex) ? "selected" : ""} ${
+                                          dragging && selectedPoints.includes(pointIndex) ? "dragging" : ""
+                                        }`}
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
