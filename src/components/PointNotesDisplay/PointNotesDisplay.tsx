@@ -21,7 +21,7 @@ const PointNotesDisplay: React.FC = () => {
 
     const thing: Thing | undefined = route.things[point.thingId];
     if (thing && (thing.type === "Shrine" || thing.type === "Lightroot")) {
-      if (!point.action || point.action === Action.None) {
+      if (!point.action) {
         let wasPreviouslySeen = false;
 
         // Loop through branches and points to check if the current Thing was previously activated or completed
