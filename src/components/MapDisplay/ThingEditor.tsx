@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, InputGroup, Button, NumericInput, Divider } from "@blueprintjs/core";
 import { useDispatch } from "react-redux";
 import { Thing } from "../../models";
@@ -11,6 +11,10 @@ interface ThingEditorProps {
 }
 
 const ThingEditor: React.FC<ThingEditorProps> = ({ thing, isOpen, onClose }) => {
+  useEffect(() => {
+    setEditedThing({ ...thing });
+  }, [thing]);
+
   const [editedThing, setEditedThing] = useState<Thing>({ ...thing });
   const dispatch = useDispatch();
 
