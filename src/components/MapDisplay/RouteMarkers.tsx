@@ -35,7 +35,7 @@ export const RouteMarkers: React.FC = () => {
     }
 
     const newIcon = L.icon({
-      iconUrl: "/assets/icons/" + thing.icon + ".png",
+      iconUrl: route.game.icons[thing.icon],
       iconSize: [40, 40],
       iconAnchor: [20, 20],
     });
