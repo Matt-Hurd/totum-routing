@@ -46,7 +46,7 @@ const PointNotesDisplay: React.FC = () => {
     return null;
 
   const isShrineOrLightroot = (thing: Thing) => {
-    return thing.type === "Shrine" || thing.type === "Lightroot";
+    return thing.type === "Shrine" || thing.type === "Lightroot" || thing.type === "level";
   };
 
   const handleNotesChange = (content: string) => {

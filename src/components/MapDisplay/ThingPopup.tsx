@@ -52,7 +52,7 @@ const ThingPopup: React.FC<ThingPopupProps> = ({ thing, findUsageOfThing }) => {
     <div>
       {name}
       <br />
-      {coordinates.y.toFixed(0)} | {coordinates.x.toFixed(0)} | {coordinates.z.toFixed(0)}
+      {coordinates.x.toFixed(0)} | {coordinates.y.toFixed(0)} | {coordinates.z.toFixed(0)}
       <br />
       {usages.map((usage) => (
         <div key={`${usage.branchName}-${usage.pointIndex}`}>

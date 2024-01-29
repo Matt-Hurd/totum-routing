@@ -4,6 +4,7 @@ import PolylineWithArrow from "./PolylineWithArrow";
 import { selectRouteData } from "../../store/routeSlice";
 import { selectSelection } from "../../store/selectionSlice";
 import { Branch } from "../../models";
+import { convertPoint3DTo2D } from "./projectionUtils";
 
 const RouteLines: React.FC = () => {
   const route = useSelector(selectRouteData);
@@ -28,19 +29,29 @@ const RouteLines: React.FC = () => {
           lastLayerId = thing.layerId;
         }
 
-        if ((thing.layerId === visibleLayerId || lastLayerId === visibleLayerId) && lastPosition !== null) {
-          const position = [-thing.coordinates.x, thing.coordinates.y];
+        const layer = route.game.layers[thing.layerId];
+        if ((thing.layerId === visibleLayerId || lastLayerId === visibleLayerId) && lastPosition !== null && (!layer.rotation || thing.layerId === lastLayerId)) {
+          let position = [-thing.coordinates.x, thing.coordinates.y];
+          if (layer.rotation) {
+            const converted = convertPoint3DTo2D(thing.coordinates, layer);
+            position = [converted.x, converted.y];
+          }
           polylines.push(
             <PolylineWithArrow
               key={`polyline-${polylines.length}`}
               positions={[lastPosition, position]}
               color="blue"
               warp={point.action === "WARP"}
-            />,
+            />
           );
         }
 
-        lastPosition = [-thing.coordinates.x, thing.coordinates.y];
+        if (layer.rotation) {
+          const converted = convertPoint3DTo2D(thing.coordinates, layer);
+          lastPosition = [converted.x, converted.y];
+        } else {
+          lastPosition = [-thing.coordinates.x, thing.coordinates.y];
+        }
         lastLayerId = thing.layerId;
       }
     });

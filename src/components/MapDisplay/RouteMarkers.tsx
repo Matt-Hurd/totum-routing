@@ -10,6 +10,7 @@ import { Icon } from "leaflet";
 import L from "leaflet";
 import { Action } from "../../models/Point";
 import ThingPopup from "./ThingPopup";
+import { convertPoint3DTo2D } from "./projectionUtils";
 
 export const RouteMarkers: React.FC = () => {
   const route = useSelector(selectRouteData);
@@ -61,14 +62,14 @@ export const RouteMarkers: React.FC = () => {
           branchIndex: selection.branchIndex,
           point: { thingId: thing.uid, htmlNote: "", shortNote: "", action: Action.None },
           pointIndex: selection.pointIndex + 1,
-        }),
+        })
       );
       dispatch(setPointIndex(selection.pointIndex + 1));
     }
   };
 
   const findUsageOfThing = (
-    thingId: string,
+    thingId: string
   ): Array<{ branchName: string; branchIndex: number; pointIndex: number }> => {
     const usages: Array<{ branchName: string; branchIndex: number; pointIndex: number }> = [];
 
@@ -118,10 +119,20 @@ export const RouteMarkers: React.FC = () => {
       {filteredThings.map((thing) => {
         const { coordinates } = thing;
 
+        let long = coordinates.x;
+        let lat = -coordinates.z;
+        const layer = route.game.layers[thing.layerId];
+
+        if (layer.rotation) {
+          const converted = convertPoint3DTo2D(coordinates, layer)
+          lat = converted.x;
+          long = converted.y;
+        }
+
         return (
           <Marker
             key={thing.uid}
-            position={[-coordinates.x, coordinates.y]}
+            position={[lat, long]}
             icon={getIconForThing(thing)}
             ref={(ref) => markerRefs.current.set(thing.uid, ref)}
             eventHandlers={{

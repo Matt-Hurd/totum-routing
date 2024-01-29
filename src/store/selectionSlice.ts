@@ -4,13 +4,13 @@ import { RootState } from ".";
 interface SelectionState {
   branchIndex: number | null;
   pointIndex: number | null;
-  layer: string;
+  layer: string | null;
 }
 
 const initialState: SelectionState = {
   branchIndex: null,
   pointIndex: null,
-  layer: "sky",
+  layer: null,
 };
 
 export const selectionSlice = createSlice({
